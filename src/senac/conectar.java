@@ -1,157 +1,186 @@
 package senac;
 
-import java.math.BigDecimal;
-import java.sql.*;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Scanner;
 
 public class conectar {
 
-    static String URL = "jdbc:mysql://localhost:3306/senac";
-    static String USER = "root";
-    static String PASSWORD = "123456";
+	static String URL = "jdbc:mysql://localhost:3306/sistemapetshop";
+	static String USER = "root";
+	static String PASSWORD = "123456";
 
-    public static Connection conexao_com_banco() {
-        try {
-            return DriverManager.getConnection(URL, USER, PASSWORD);
-        } catch (SQLException e) {
-            System.err.println("ERRO, QUEBROU TUDO :c " + e.getMessage());
-            return null;
-        }
-    }
+	public static Connection conexao_com_banco() {
+		try {
+			return DriverManager.getConnection(URL, USER, PASSWORD);
+		} catch (SQLException e) {
+			System.err.println("ERRO, QUEBROU TUDO :c " + e.getMessage());
+			return null;
+		}
+	}
 
-    public static void inserirDados() throws SQLException {
-        Scanner scanner = new Scanner(System.in);
+	public static void inserirDados() throws SQLException {
+		Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Digite o nome do produto:");
-        String nome = scanner.nextLine();
+		System.out.println("Digite o nome do cliente:");
+		String nome = scanner.nextLine();
 
-        System.out.println("Digite o preço do produto:");
-        BigDecimal preco = new BigDecimal(scanner.nextLine());
 
-        System.out.println("Digite a quantidade do produto:");
-        int quantidade = Integer.parseInt(scanner.nextLine());
+		String telefone = "";
 
-        String sql = "INSERT INTO produtos(nome, preco, quantidade) VALUES (?, ?, ?);";
+		while (true) {  
+			System.out.println("Digite o telefone do cliente:");
+			telefone = scanner.nextLine();
 
-        try (Connection realizar_conexao = conexao_com_banco();
-             PreparedStatement cursor = realizar_conexao.prepareStatement(sql)) {
+			try {
+				int telNum = Integer.parseInt(telefone);   
+				break;
+			}
+			catch (Exception e) {
+				System.err.println("Digite apenas numeros");
+				continue;
+			}
+		}
+		System.out.println("Digite o endereço do cliente:");
+		String endereco = scanner.nextLine();
 
-            cursor.setString(1, nome);
-            cursor.setBigDecimal(2, preco);
-            cursor.setInt(3, quantidade);
-            cursor.executeUpdate();
-            System.out.println("Produto inserido com sucesso!");
-        }
-    }
+		String sql = "INSERT INTO clientes(nome, telefone, endereco) VALUES (?, ?, ?);";
 
-    public static void consultarDados() throws SQLException {
-        String sql = "SELECT * FROM produtos";
+		try (Connection realizar_conexao = conexao_com_banco();
+				PreparedStatement cursor = realizar_conexao.prepareStatement(sql)) {
 
-        try (Connection realizar_conexao = conexao_com_banco();
-             Statement cursor = realizar_conexao.createStatement();
-             ResultSet resultado_consulta = cursor.executeQuery(sql)) {
+			cursor.setString(1, nome);
+			cursor.setString(2, telefone);
+			cursor.setString(3, endereco);
+			cursor.executeUpdate();
+			System.out.println("Cliente inserido com sucesso!");
+		}
+	}
 
-            while (resultado_consulta.next()) {
-                int id = resultado_consulta.getInt("id");
-                String nome = resultado_consulta.getString("nome");
-                double preco = resultado_consulta.getDouble("preco");
-                int quantidade = resultado_consulta.getInt("quantidade");
+	public static void consultarDados() throws SQLException {
+		String sql = "SELECT * FROM clientes";
 
-                System.out.printf("ID: %d, Nome: %s, Preço: %.2f, Quantidade: %d%n",
-                        id, nome, preco, quantidade);
-            }
-        }
-    }
+		try (Connection realizar_conexao = conexao_com_banco();
+				Statement cursor = realizar_conexao.createStatement();
+				ResultSet resultado_consulta = cursor.executeQuery(sql)) {
 
-    public static void atualizarDados() throws SQLException {
-        Scanner scanner = new Scanner(System.in);
+			while (resultado_consulta.next()) {
+				int id = resultado_consulta.getInt("id");
+				String nome = resultado_consulta.getString("nome");
+				String telefone = resultado_consulta.getString("telefone");
+				String endereco = resultado_consulta.getString("endereco");
 
-        System.out.println("Digite o ID do produto que deseja atualizar:");
-        int id = Integer.parseInt(scanner.nextLine());
+				System.out.printf("ID: %d, Nome: %s, Telefone: %s, Endereço: %s\n",
+						id, nome, telefone, endereco);
+			}
+		}
+	}
 
-        System.out.println("Digite o novo nome do produto:");
-        String nome = scanner.nextLine();
+	public static void atualizarDados() throws SQLException {
+		Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Digite o novo preço do produto:");
-        BigDecimal preco = new BigDecimal(scanner.nextLine());
+		System.out.println("---------------------------------------------------------------------------------");
+		consultarDados();
+		System.out.println("---------------------------------------------------------------------------------");
 
-        System.out.println("Digite a nova quantidade do produto:");
-        int quantidade = Integer.parseInt(scanner.nextLine());
+		System.out.print("Digite o ID do produto que deseja atualizar: ");
+		int id = Integer.parseInt(scanner.nextLine());
 
-        String sql = "UPDATE produtos SET nome = ?, preco = ?, quantidade = ? WHERE id = ?";
+		System.out.print("Digite o novo nome do cliente: ");
+		String nome = scanner.nextLine();
 
-        try (Connection conexao = conexao_com_banco();
-             PreparedStatement cursor = conexao.prepareStatement(sql)) {
+		System.out.print("Digite o novo telefone do cliente: ");
+		String telefone = scanner.nextLine();
 
-            cursor.setString(1, nome);
-            cursor.setBigDecimal(2, preco);
-            cursor.setInt(3, quantidade);
-            cursor.setInt(4, id);
-            int rowsAffected = cursor.executeUpdate();
+		System.out.print("Digite o novo endereço do cliente: ");
+		String endereco = scanner.nextLine();
 
-            if (rowsAffected > 0) {
-                System.out.println("Produto atualizado com sucesso!");
-            } else {
-                System.out.println("Produto não encontrado.");
-            }
-        }
-    }
+		String sql = "UPDATE clientes SET nome = ?, telefone = ?, endereco = ? WHERE id = ?";
 
-    public static void deletarDados() throws SQLException {
-        Scanner scanner = new Scanner(System.in);
+		try (Connection conexao = conexao_com_banco();
+				PreparedStatement cursor = conexao.prepareStatement(sql)) {
 
-        System.out.println("Digite o nome do produto que deseja excluir:");
-        String nome = scanner.nextLine();
+			cursor.setString(1, nome);
+			cursor.setString(2, telefone);
+			cursor.setString(3, endereco);
+			cursor.setInt(4, id);
+			int rowsAffected = cursor.executeUpdate();
 
-        String sql = "DELETE FROM produtos WHERE nome = ?";
+			if (rowsAffected > 0) {
+				System.out.println("Cliente atualizado com sucesso!");
+			} else {
+				System.out.println("Cliente não encontrado.");
+			}
+		}
+	}
 
-        try (Connection conexao = conexao_com_banco();
-             PreparedStatement cursor = conexao.prepareStatement(sql)) {
+	public static void deletarDados() throws SQLException {
+		Scanner scanner = new Scanner(System.in);
 
-            cursor.setString(1, nome);
-            int rowsAffected = cursor.executeUpdate();
+		System.out.println("---------------------------------------------------------------------------------");
+		consultarDados();
+		System.out.println("---------------------------------------------------------------------------------");
 
-            if (rowsAffected > 0) {
-                System.out.println("Produto deletado com sucesso!");
-            } else {
-                System.out.println("Produto não encontrado.");
-            }
-        }
-    }
+		System.out.print("Digite o id do produto que deseja excluir: ");
+		int id = scanner.nextInt();
 
-    public static void main(String[] args) throws SQLException {
-        Scanner scanner = new Scanner(System.in);
-        int opcao = 0;
+		String sql = "DELETE FROM clientes WHERE id = ?";
 
-        while (opcao != 5) {
-            System.out.println("\nEscolha uma opção:");
-            System.out.println("1. Inserir Dados");
-            System.out.println("2. Consultar Dados");
-            System.out.println("3. Atualizar Dados");
-            System.out.println("4. Deletar Dados");
-            System.out.println("5. Sair");
+		try (Connection conexao = conexao_com_banco();
+				PreparedStatement cursor = conexao.prepareStatement(sql)) {
 
-            opcao = Integer.parseInt(scanner.nextLine());
+			cursor.setInt(1, id);
+			int rowsAffected = cursor.executeUpdate();
 
-            switch (opcao) {
-                case 1:
-                    inserirDados();
-                    break;
-                case 2:
-                    consultarDados();
-                    break;
-                case 3:
-                    atualizarDados();
-                    break;
-                case 4:
-                    deletarDados();
-                    break;
-                case 5:
-                    System.out.println("Saindo...");
-                    break;
-                default:
-                    System.out.println("Opção inválida! Tente novamente.");
-            }
-        }
-    }
+			if (rowsAffected > 0) {
+				System.out.println("Cliente deletado com sucesso!");
+			} else {
+				System.out.println("Cliente não encontrado.");
+			}
+		}
+	}
+
+	public static void main(String[] args) throws SQLException {
+		Scanner scanner = new Scanner(System.in);
+
+
+		while (true) {      	
+			System.out.println("\nEscolha uma opção:");
+			System.out.println("1. Inserir Dados");
+			System.out.println("2. Consultar Dados");
+			System.out.println("3. Atualizar Dados");
+			System.out.println("4. Deletar Dados");
+			System.out.println("5. Sair");
+			System.out.print("Opção: ");
+			String opcao = scanner.nextLine();
+
+			switch (opcao) {
+			case "1":
+				inserirDados();
+				break;
+			case "2":
+				consultarDados();
+				break;
+			case "3":
+				atualizarDados();
+				break;
+			case "4":
+				deletarDados();
+				break;
+			case "5":
+				System.out.println("Saindo...");
+				return;
+			default:
+				System.out.println("Opção inválida! Tente novamente.");
+			}
+
+			System.out.println("Pressione uma tecla");
+			scanner.nextLine();
+		}
+	}
 }
